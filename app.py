@@ -1,15 +1,18 @@
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 
-# Page configuration
+# -----------------------------
+# Page Settings
+# -----------------------------
 st.set_page_config(
     page_title="Climate Zone Finder",
     page_icon="🌍",
     layout="wide"
 )
 
-# Custom CSS for styling
+# -----------------------------
+# CSS Styling
+# -----------------------------
 st.markdown("""
     <style>
     .main-header {
@@ -42,24 +45,15 @@ st.markdown("""
         align-items: center;
         height: 48px;
     }
-    .stSelectbox > div > div {
-        background-color: white;
-        border: 1px solid #ddd;
-    }
-    .stButton > button {
-        background-color: #dc3545;
-        color: white;
-        border-radius: 6px;
-        padding: 8px 18px;
-    }
     </style>
 """, unsafe_allow_html=True)
 
+# -----------------------------
 # Header
+# -----------------------------
 st.markdown('<div class="main-header">CLIMATE ZONE FINDER</div>', unsafe_allow_html=True)
 st.markdown('<div class="header-line"></div>', unsafe_allow_html=True)
 
-# Description
 st.markdown("""
     <div class="description">
     Identify the climate zone of any location across the world using data from
@@ -67,20 +61,24 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Load data
+# -----------------------------
+# Load Data
+# -----------------------------
 @st.cache_data
 def load_data():
     return pd.read_excel("US&InternationStations-ClimateZones.xlsx")
 
 df = load_data()
 
-# Add spacing
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Centered form layout
+# -----------------------------
+# Input Form
+# -----------------------------
 col_left, col_center, col_right = st.columns([0.5, 3, 0.5])
 
 with col_center:
+
     # Country
     r1_label, r1_input = st.columns([1, 2.5])
     with r1_label:
@@ -97,10 +95,10 @@ with col_center:
         locations = sorted(df[df["Country"] == selected_country]["Location"].unique())
         selected_location = st.selectbox("Location", locations, key="location", label_visibility="collapsed")
 
-    # Fetch result row
+    # Fetch Selected Row
     result = df[(df["Country"] == selected_country) & (df["Location"] == selected_location)]
 
-    # Climate Zone numeric
+    # Climate Zone
     r3_label, r3_input = st.columns([1, 2.5])
     with r3_label:
         st.markdown('<div class="label-text">Climate Zone</div>', unsafe_allow_html=True)
@@ -132,78 +130,240 @@ with col_center:
             st.markdown('<p style="font-size: 18px; font-weight: 500; color: #555;">-</p>',
                         unsafe_allow_html=True)
 
-    # Report button
+    # Report Button
     r5_label, r5_input = st.columns([1, 2.5])
     with r5_label:
         st.markdown('<div class="label-text">Click to generate report</div>', unsafe_allow_html=True)
     with r5_input:
         report_clicked = st.button("REPORT", type="primary")
 
-# -------------------------
-# REPORT SECTION
-# -------------------------
+def amcharts_world_map(df, lat_sel, lon_sel, location_name, climate_zone):
+
+    import json
+
+    # Color palette for climate zones
+    zone_color_palette = [
+        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
+        "#9467bd", "#8c564b", "#e377c2", "#7f7f7f",
+        "#bcbd22", "#17becf"
+    ]
+
+    climate_zones = sorted(df["Climate Zone"].unique())
+    zone_colors = {
+        zone: zone_color_palette[i % len(zone_color_palette)]
+        for i, zone in enumerate(climate_zones)
+    }
+
+    # Tooltip-enabled dataset
+    df_js = json.dumps([
+        {
+            "lat": float(row["Latitude"]),
+            "lon": float(row["Longitude"]),
+            "title": row["Location"],
+            "country": row["Country"],
+            "zone": row["Climate Zone"],
+            "color": zone_colors[row["Climate Zone"]],
+            "tooltip": (
+                f"{row['Location']} ({row['Country']})\n"
+                f"Climate Zone: {row['Climate Zone']}\n"
+                f"Lat: {row['Latitude']}, Lon: {row['Longitude']}"
+            )
+        }
+        for row in df.to_dict(orient="records")
+    ])
+
+    # Legend dataset (unique zones)
+    legend_js = json.dumps([
+        {
+            "zone": zone,
+            "color": zone_colors[zone]
+        }
+        for zone in climate_zones
+    ])
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            #chartdiv {{
+                width: 100%;
+                height: 600px;
+                position: relative;
+            }}
+
+            /* Legend Styling */
+            .legend {{
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                background: white;
+                padding: 12px 15px;
+                border-radius: 8px;
+                box-shadow: 0 0 12px rgba(0,0,0,0.15);
+                font-family: Arial, sans-serif;
+                font-size: 14px;
+            }}
+            .legend-title {{
+                font-weight: bold;
+                margin-bottom: 8px;
+                text-align: center;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                margin-bottom: 6px;
+            }}
+            .legend-color {{
+                width: 14px;
+                height: 14px;
+                border-radius: 50%;
+                margin-right: 8px;
+            }}
+        </style>
+
+        <script src="https://cdn.amcharts.com/lib/5/index.js"></script>
+        <script src="https://cdn.amcharts.com/lib/5/map.js"></script>
+        <script src="https://cdn.amcharts.com/lib/5/geodata/worldLow.js"></script>
+        <script src="https://cdn.amcharts.com/lib/5/themes/Animated.js"></script>
+    </head>
+
+    <body>
+        <div id="chartdiv"></div>
+
+        <!-- LEGEND HTML -->
+        <div class="legend" id="legend-box">
+            <div class="legend-title">Climate Zones</div>
+        </div>
+
+        <script>
+        am5.ready(function() {{
+
+            var root = am5.Root.new("chartdiv");
+            root.setThemes([ am5themes_Animated.new(root) ]);
+
+            var chart = root.container.children.push(
+                am5map.MapChart.new(root, {{
+                    panX: "translateX",
+                    panY: "translateY",
+                    projection: am5map.geoMercator()
+                }})
+            );
+
+            var polygonSeries = chart.series.push(
+                am5map.MapPolygonSeries.new(root, {{
+                    geoJSON: am5geodata_worldLow
+                }})
+            );
+
+            // ===============================
+            // ALL POINTS (with tooltips)
+            // ===============================
+            var allPoints = chart.series.push(
+                am5map.MapPointSeries.new(root, {{
+                    latitudeField: "lat",
+                    longitudeField: "lon"
+                }})
+            );
+
+            allPoints.bullets.push(function(root, series, dataItem) {{
+                return am5.Bullet.new(root, {{
+                    sprite: am5.Circle.new(root, {{
+                        radius: 5,
+                        tooltipText: dataItem.dataContext.tooltip,
+                        fill: am5.Color.fromString(dataItem.dataContext.color),
+                        stroke: am5.color(0xffffff),
+                        strokeWidth: 1
+                    }})
+                }});
+            }});
+
+            allPoints.data.setAll({df_js});
+
+            // ===============================
+            // SELECTED POINT (highlight)
+            // ===============================
+            var selectedPoint = chart.series.push(
+                am5map.MapPointSeries.new(root, {{
+                    latitudeField: "lat",
+                    longitudeField: "lon"
+                }})
+            );
+
+            selectedPoint.bullets.push(function(root, series, dataItem) {{
+                return am5.Bullet.new(root, {{
+                    sprite: am5.Circle.new(root, {{
+                        radius: 10,
+                        fill: am5.color(0xff0000),
+                        stroke: am5.color(0xffffff),
+                        strokeWidth: 2,
+                        tooltipText:
+                            "{location_name} (Selected)\\n" +
+                            "Climate Zone: {climate_zone}\\n" +
+                            "Lat: {lat_sel}, Lon: {lon_sel}"
+                    }})
+                }});
+            }});
+
+            selectedPoint.data.setAll([{{
+                lat: {lat_sel},
+                lon: {lon_sel}
+            }}]);
+
+            // ===============================
+            // BUILD LEGEND
+            // ===============================
+            var legendData = {legend_js};
+            var legendBox = document.getElementById("legend-box");
+
+            legendData.forEach(function(item) {{
+                var row = document.createElement("div");
+                row.className = "legend-item";
+                row.innerHTML = `
+                    <div class="legend-color" style="background:${{item.color}}"></div>
+                    <div>${{item.zone}}</div>
+                `;
+                legendBox.appendChild(row);
+            }});
+
+        }});
+        </script>
+    </body>
+    </html>
+    """
+
+    st.components.v1.html(html_code, height=650, scrolling=False)
+
+# -----------------------------
+# Show Report
+# -----------------------------
 if report_clicked and not result.empty:
 
-    st.markdown("<br><br>", unsafe_allow_html=True)
-
-    # Large Climate Zone Highlight
-    st.markdown(
-        f'<div style="text-align:center;"><p style="font-size:56px; font-weight:300; color:#dc3545;">{climate_zone}</p></div>',
-        unsafe_allow_html=True,
-    )
-
-    # Info Box
-    colA, colB, colC = st.columns([1, 2, 1])
-    with colB:
-        st.markdown(f"""
-            <div style="background-color:#f8f9fa; padding:30px; border-radius:10px; border-left:5px solid #ff6b35;">
-                <h3 style="color:#333;">Climate Zone Details</h3>
-                <p style="font-size:18px;"><strong>Country:</strong> {selected_country}</p>
-                <p style="font-size:18px;"><strong>Location:</strong> {selected_location}</p>
-                <p style="font-size:18px;"><strong>Climate Zone:</strong> 
-                    <span style="color:#dc3545; font-weight:bold;">{climate_zone}</span></p>
-                <p style="font-size:18px;"><strong>Climate Zone Name:</strong> {climate_zone_name}</p>
-            </div>
-        """, unsafe_allow_html=True)
-
-    # -------------------------
-    # WORLD MAP
-    # -------------------------
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.subheader("🌍 Climate Zone on World Map")
 
     lat_selected = result.iloc[0]["Latitude"]
     lon_selected = result.iloc[0]["Longitude"]
 
-    # Plot ALL locations with climate zones
-    fig = px.scatter_geo(
-        df,
-        lat="Latitude",
-        lon="Longitude",
-        hover_name="Location",
-        hover_data={"Climate Zone": True, "Country": True},
-        color="Climate Zone",
-        projection="natural earth",
-        size=[8] * len(df),
+    # # Replace Plotly with amCharts map
+    # amcharts_world_map(
+    #     lat_selected,
+    #     lon_selected,
+    #     selected_location,
+    #     climate_zone
+    # )
+    amcharts_world_map(
+    df,
+    lat_selected,
+    lon_selected,
+    selected_location,
+    climate_zone
     )
 
-    # Highlight selected location with red star
-    fig.add_scattergeo(
-        lat=[lat_selected],
-        lon=[lon_selected],
-        marker=dict(size=18, color="red", symbol="star"),
-        name="Selected Location",
-        hovertext=f"{selected_location} ({climate_zone})",
-    )
 
-    fig.update_layout(
-        height=600,
-        margin=dict(l=0, r=0, t=0, b=0),
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
+# -----------------------------
 # Footer
+# -----------------------------
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 st.markdown("""
