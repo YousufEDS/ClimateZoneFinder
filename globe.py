@@ -1,18 +1,14 @@
 import streamlit as st
 import pandas as pd
 
-# -----------------------------
-# Page Settings
-# -----------------------------
+
 st.set_page_config(
     page_title="Climate Zone Finder",
     page_icon="🌍",
     layout="wide"
 )
 
-# -----------------------------
-# CSS Styling
-# -----------------------------
+
 st.markdown("""
     <style>
     /* Remove top padding/margin */
@@ -102,9 +98,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# Header
-# -----------------------------
+
 st.markdown('<div class="main-header">CLIMATE ZONE FINDER</div>', unsafe_allow_html=True)
 st.markdown('<div class="header-line"></div>', unsafe_allow_html=True)
 
@@ -115,13 +109,11 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# -----------------------------
-# Load Data
-# -----------------------------
+
 @st.cache_data
 def load_data():
     df = pd.read_excel("US&InternationStations-ClimateZones.xlsx")
-    st.write(f"Data loaded: {df.shape[0]} records.")
+    # st.write(f"Data loaded: {df.shape[0]} records.")
     # st.write(df[df['Country'] == 'Algeria (DZA)'])
     return df
 
@@ -130,18 +122,14 @@ df = load_data()
 
 # st.markdown("<br>", unsafe_allow_html=True)
 
-# -----------------------------
 # Two Column Layout
-# -----------------------------
 left_col, right_col = st.columns([1, 2.5])
 
-# -----------------------------
 # LEFT SIDE - Input Form
-# -----------------------------
 with left_col:
     st.markdown('<div class="section-title">📍 Location Selection</div>', unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    # st.markdown("<br>", unsafe_allow_html=True)
     
     # Country
     st.markdown('<div class="label-text">Country</div>', unsafe_allow_html=True)
@@ -188,7 +176,7 @@ with left_col:
         st.markdown('<p style="font-size: 18px; font-weight: 500; color: #dc3545; margin: 10px 0;">-</p>',
                     unsafe_allow_html=True)
     
-    st.markdown("<br>", unsafe_allow_html=True)
+    # st.markdown("<br>", unsafe_allow_html=True)
     
     # Report Button
     report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
@@ -197,7 +185,7 @@ with left_col:
     if report_clicked and not result.empty:
         st.markdown(f"""
             <div class="report-card">
-                <div class="report-title">📋 Climate Zone Report</div>
+                <div class="report-title">Climate Zone Report</div>
                 <div class="report-item">
                     <div class="report-label">Location</div>
                     <div class="report-value">{selected_location}</div>
@@ -217,9 +205,7 @@ with left_col:
             </div>
         """, unsafe_allow_html=True)
 
-# -----------------------------
 # RIGHT SIDE - Globe Visualization
-# -----------------------------
 def amcharts_world_globe(df, lat_sel, lon_sel, location_name, climate_zone, climate_zone_name):
     import json
 
@@ -370,7 +356,7 @@ def amcharts_world_globe(df, lat_sel, lon_sel, location_name, climate_zone, clim
     <div id="container">
         <div id="chartdiv"></div>
         <div id="legend">
-            <h4>🎨 Climate Zone Legend</h4>
+            <h4>Climate Zone Legend</h4>
             <div class="legend-grid">
                 {''.join([
                     f'<div class="legend-item">'
@@ -522,9 +508,7 @@ with right_col:
     else:
         st.info("Please select a location to view on the globe.")
 
-# -----------------------------
 # Footer
-# -----------------------------
 st.markdown("<br>", unsafe_allow_html=True)
 st.markdown("---")
 st.markdown("""
