@@ -120,7 +120,6 @@ def load_ashrae_data():
 @st.cache_data
 def load_ecbc_data():
     df = pd.read_excel("INDIA-WeatherMapping.xlsx")
-    # st.write(df.head())
     return df
 
 
@@ -397,12 +396,21 @@ def amcharts_india_map(df, lat_sel, lon_sel, location_name, state_name, climate_
     
     # ECBC Climate Zone Colors
     ecbc_colors = {
-        "Hot-Dry": "#ff6b35",
-        "Warm-Humid": "#2ca02c",
-        "Composite": "#ff7f0e",
-        "Moderate": "#1f77b4",
-        "Cold": "#9467bd",
-        "Cold,Warm-Humid": "#8c564b"
+        "Cold": "#ff6b35",
+        "Composite": "#2ca02c",
+        "Composite , Warm-Humid": "#ff7f0e",
+        "Hot-Dry": "#1f77b4",
+        "Warm-Humid , Composite": "#9467bd",
+        "Composite,Warm-humid": "#8c564b",
+        "Temperate": "#e377c2",
+        "Warm-Himid , Temperate": "#7f7f7f",
+        "Composite,Hot-Dry": "#bcbd22",
+        "Hot-Dry , Composite": "#17becf",
+        "Cold , Hot-Dry": "#7f7f7f",
+        "Cold , Warm-Humid": "#ffbb78",
+        "Cold,Composite": "#98df8a",
+        "Warm-Humid": "#ff9896",
+        "Cold,Warm-Humid": "#c5b0d5"
     }
 
     zone_color_map = {z: ecbc_colors.get(z, "#444444") for z in zone_list}
@@ -769,6 +777,11 @@ elif select_standard == "ECBC":
     with left_col:
         st.markdown('<div class="section-title">📍 Location Selection (India)</div>', unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
+
+        # country is fixed to India
+        st.markdown('<div class="label-text">Country</div>', unsafe_allow_html=True)
+        country = "India"
+        selected_country = st.selectbox(country, [country], index=0, key="country_ecbc", label_visibility="collapsed", disabled=True)
 
         st.markdown('<div class="label-text">State</div>', unsafe_allow_html=True)
         states = sorted(df["State"].unique())
