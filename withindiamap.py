@@ -662,7 +662,7 @@ def amcharts_india_map(df, lat_sel, lon_sel, location_name, state_name, climate_
                 selectedSeries.data.setAll([{selected_js}]);
 
                 // Zoom to fit India
-                chart.set("zoomLevel", 1.2);
+                chart.set("zoomLevel", 1);
                 chart.set("zoomControl", am5map.ZoomControl.new(root, {{}}));
 
                 window.indiaRoot = root;
@@ -807,15 +807,15 @@ elif select_standard == "ECBC":
         # country is fixed to India
         st.markdown('<div class="label-text">Country</div>', unsafe_allow_html=True)
         country = "India"
-        selected_country = st.selectbox(country, [country], index=0, key="country_ecbc", label_visibility="collapsed", disabled=True)
+        selected_country = st.selectbox(country, [country], index=0, key="country_ecbc", label_visibility="collapsed", disabled=True, width=300)
 
         st.markdown('<div class="label-text">State</div>', unsafe_allow_html=True)
         states = sorted(df["State"].unique())
-        selected_state = st.selectbox("State", states, key="state", label_visibility="collapsed")
+        selected_state = st.selectbox("State", states, key="state", label_visibility="collapsed", width=300)
         
         st.markdown('<div class="label-text">Location</div>', unsafe_allow_html=True)
         locations = sorted(df[df["State"] == selected_state]["Location"].unique())
-        selected_location = st.selectbox("Location", locations, key="ecbc_location", label_visibility="collapsed")
+        selected_location = st.selectbox("Location", locations, key="ecbc_location", label_visibility="collapsed", width=300)
         
         result = df[(df["State"] == selected_state) & (df["Location"] == selected_location)]
         
@@ -832,18 +832,28 @@ elif select_standard == "ECBC":
                         unsafe_allow_html=True)
         
         # Button layout - Generate Report and Download EPW side by side
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
-        with col2:
-            if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
-                epw_url = result.iloc[0]["EPW File"]
-                if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
-                    st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=True)
-                else:
-                    st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+        # col1, col2 = st.columns([1, 1])
+        # with col1:
+        #     report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
+        # with col2:
+        #     if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
+        #         epw_url = result.iloc[0]["EPW File"]
+        #         if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
+        #             st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=True)
+        #         else:
+        #             st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+        #     else:
+        #         st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+        
+        report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=False, width=300)
+        if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
+            epw_url = result.iloc[0]["EPW File"]
+            if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
+                st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=False, width=300)
             else:
                 st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+        else:
+            st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
         
         if report_clicked and not result.empty:
             epw_file = result.iloc[0].get("EPW File", "Not Available")
