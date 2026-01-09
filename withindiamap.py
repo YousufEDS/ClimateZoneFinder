@@ -113,7 +113,7 @@ st.markdown("""
 
 @st.cache_data
 def load_ashrae_data():
-    df = pd.read_excel("US&InternationStations-ClimateZones.xlsx")
+    df = pd.read_excel("ASHRAE-ClimateZoneMapping.xlsx")
     return df
 
 
@@ -695,11 +695,11 @@ if select_standard == "ASHRAE":
 
         st.markdown('<div class="label-text">Country</div>', unsafe_allow_html=True)
         countries = sorted(df["Country"].unique())
-        selected_country = st.selectbox("Country", countries, key="country", label_visibility="collapsed")
+        selected_country = st.selectbox("Country", countries, key="country", label_visibility="collapsed", width=300)
         
         st.markdown('<div class="label-text">Location</div>', unsafe_allow_html=True)
         locations = sorted(df[df["Country"] == selected_country]["Location"].unique())
-        selected_location = st.selectbox("Location", locations, key="location", label_visibility="collapsed")
+        selected_location = st.selectbox("Location", locations, key="location", label_visibility="collapsed", width=300)
         
         result = df[(df["Country"] == selected_country) & (df["Location"] == selected_location)]
         
@@ -727,9 +727,34 @@ if select_standard == "ASHRAE":
             st.markdown('<p style="font-size: 18px; font-weight: 500; color: #dc3545; margin: 10px 0;">-</p>',
                         unsafe_allow_html=True)
         
-        report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=False)
+        # Button layout - Generate Report and Download EPW side by side
+        # col1, col2 = st.columns([1, 1])
+        # with col1:
+        #     report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
+        # with col2:
+        #     if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
+        #         epw_url = result.iloc[0]["EPW File"]
+        #         if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
+        #             st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=True)
+        #         else:
+        #             st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+        #     else:
+        #         st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+        
+        report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=False, width=300)
+        if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
+            epw_url = result.iloc[0]["EPW File"]
+            if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
+                st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=False, width=300)
+            else:
+                st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
+        else:
+            st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
         
         if report_clicked and not result.empty:
+            epw_file = result.iloc[0].get("EPW File", "Not Available")
+            epw_status = "Available" if (epw_file and str(epw_file).strip() != "" and str(epw_file) != "0") else "Not Available"
+            
             st.markdown(f"""
                 <div class="report-card">
                     <div class="report-title">Climate Zone Report</div>
@@ -749,6 +774,7 @@ if select_standard == "ASHRAE":
                         <div class="report-label">Climate Zone Name</div>
                         <div class="report-value">{climate_zone_name}</div>
                     </div>
+
                 </div>
             """, unsafe_allow_html=True)
 
@@ -805,11 +831,23 @@ elif select_standard == "ECBC":
             st.markdown('<p style="font-size: 28px; font-weight: bold; color: #dc3545; margin: 10px 0;">-</p>',
                         unsafe_allow_html=True)
         
-        report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=False)
+        # Button layout - Generate Report and Download EPW side by side
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
+        with col2:
+            if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
+                epw_url = result.iloc[0]["EPW File"]
+                if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
+                    st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=True)
+                else:
+                    st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+            else:
+                st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
         
         if report_clicked and not result.empty:
             epw_file = result.iloc[0].get("EPW File", "Not Available")
-            epw_display = f'<a href="{epw_file}" target="_blank" style="color: white; text-decoration: underline;">Download EPW</a>' if epw_file and epw_file != "0" else "Not Available"
+            epw_display = f'<a href="{epw_file}" target="_blank" style="color: white; text-decoration: underline;">Download EPW</a>' if (epw_file and str(epw_file).strip() != "" and str(epw_file) != "0") else "Not Available"
             
             st.markdown(f"""
                 <div class="report-card">
@@ -862,4 +900,4 @@ st.markdown("""
     <div style="text-align:center; color:#999; padding:20px;">
         Climate Zone Finder Dashboard | Data-driven Climate Analysis
     </div>
-""", unsafe_allow_html=True)    
+""", unsafe_allow_html=True)
