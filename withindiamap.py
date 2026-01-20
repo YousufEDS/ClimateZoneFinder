@@ -123,6 +123,42 @@ def load_ecbc_data():
     return df
 
 
+# Function to get color for a climate zone (ASHRAE)
+def get_ashrae_zone_color(df, climate_zone):
+    df["Climate Zone"] = df["Climate Zone"].astype(str).str.strip()
+    climate_zone = str(climate_zone).strip()
+    
+    zone_list = sorted(df["Climate Zone"].unique())
+    
+    palette = [
+        "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+        "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+        "#005f99", "#cc5500", "#009933", "#990000", "#663399",
+        "#00b3b3", "#b30047", "#ff66b2", "#66ff66", "#ffd966"
+    ]
+    
+    while len(palette) < len(zone_list):
+        palette = palette + palette
+    
+    zone_color_map = {z: palette[i] for i, z in enumerate(zone_list)}
+    return zone_color_map.get(climate_zone, "#444444")
+
+
+# Function to get color for a climate zone (ECBC)
+def get_ecbc_zone_color(climate_zone):
+    climate_zone = str(climate_zone).strip()
+    
+    ecbc_colors = {
+        "Cold": "#02a0c5",
+        "Composite": "#dec45e",
+        "Hot-Dry": "#c60102",
+        "Temperate": "#f89cc9",
+        "Warm-Humid": "#e59704",
+    }
+    
+    return ecbc_colors.get(climate_zone, "#444444")
+
+
 # Globe visualization for ASHRAE (World)
 def amcharts_world_globe(df, lat_sel, lon_sel, location_name, climate_zone, climate_zone_name):
     # Normalize zone values
@@ -198,23 +234,29 @@ def amcharts_world_globe(df, lat_sel, lon_sel, location_name, climate_zone, clim
             max-height: 700px;
             overflow-y: auto;
         }}
+      
         #legend::-webkit-scrollbar {{
             width: 5px;
         }}
+
         #legend::-webkit-scrollbar-track {{
             background: #f1f1f1;
             border-radius: 10px;
         }}
+
         #legend::-webkit-scrollbar-thumb {{
             background: #ff6b35;
             border-radius: 10px;
         }}
+
+
         #legend h4 {{
             margin: 0 0 15px 0;
             font-size: 18px;
             color: #333;
             font-weight: bold;
         }}
+
         .legend-grid {{
             display: flex;
             flex-direction: column;
@@ -396,21 +438,11 @@ def amcharts_india_map(df, lat_sel, lon_sel, location_name, state_name, climate_
     
     # ECBC Climate Zone Colors
     ecbc_colors = {
-        "Cold": "#ff6b35",
-        "Composite": "#2ca02c",
-        "Composite , Warm-Humid": "#ff7f0e",
-        "Hot-Dry": "#1f77b4",
-        "Warm-Humid , Composite": "#9467bd",
-        "Composite,Warm-humid": "#8c564b",
-        "Temperate": "#e377c2",
-        "Warm-Himid , Temperate": "#7f7f7f",
-        "Composite,Hot-Dry": "#bcbd22",
-        "Hot-Dry , Composite": "#17becf",
-        "Cold , Hot-Dry": "#7f7f7f",
-        "Cold , Warm-Humid": "#ffbb78",
-        "Cold,Composite": "#98df8a",
-        "Warm-Humid": "#ff9896",
-        "Cold,Warm-Humid": "#c5b0d5"
+        "Cold": "#02a0c5",
+        "Composite": "#dec45e",
+        "Hot-Dry": "#c60102",
+        "Temperate": "#f89cc9",
+        "Warm-Humid": "#e59704",
     }
 
     zone_color_map = {z: ecbc_colors.get(z, "#444444") for z in zone_list}
@@ -454,27 +486,27 @@ def amcharts_india_map(df, lat_sel, lon_sel, location_name, state_name, climate_
             height: 700px;
             min-height: 700px;
         }}
-        #legend {{
+        #legend-ecbc {{
             width: 220px;
             padding: 10px;
             background: #f8f9fa;
             border-radius: 8px;
             border: 1px solid #dee2e6;
-            max-height: 700px;
+            max-height: 300px;
             overflow-y: auto;
         }}
-        #legend::-webkit-scrollbar {{
+        #legend-ecbc::-webkit-scrollbar {{
             width: 5px;
         }}
-        #legend::-webkit-scrollbar-track {{
+        #legend-ecbc::-webkit-scrollbar-track {{
             background: #f1f1f1;
             border-radius: 10px;
         }}
-        #legend::-webkit-scrollbar-thumb {{
+        #legend-ecbc::-webkit-scrollbar-thumb {{
             background: #ff6b35;
             border-radius: 10px;
         }}
-        #legend h4 {{
+        #legend-ecbc h4 {{
             margin: 0 0 15px 0;
             font-size: 18px;
             color: #333;
@@ -521,7 +553,7 @@ def amcharts_india_map(df, lat_sel, lon_sel, location_name, state_name, climate_
 
     <div id="container">
         <div id="chartdiv"></div>
-        <div id="legend">
+        <div id="legend-ecbc">
             <h4>ECBC Climate Zones</h4>
             <div class="legend-grid">
                 {''.join([
@@ -706,8 +738,9 @@ if select_standard == "ASHRAE":
         st.markdown('<div class="label-text">Climate Zone:</div>', unsafe_allow_html=True)
         if not result.empty:
             climate_zone = result.iloc[0]["Climate Zone"]
+            zone_color = get_ashrae_zone_color(df, climate_zone)
             st.markdown(
-                f'<p style="font-size: 28px; font-weight: bold; color: #dc3545; margin: 10px 0;">{climate_zone}</p>',
+                f'<p style="font-size: 28px; font-weight: bold; color: {zone_color}; margin: 10px 0;">{climate_zone}</p>',
                 unsafe_allow_html=True,
             )
         else:
@@ -718,28 +751,15 @@ if select_standard == "ASHRAE":
         st.markdown('<div class="label-text">Climate Zone Name:</div>', unsafe_allow_html=True)
         if not result.empty:
             climate_zone_name = result.iloc[0]["Climate Zone Name"]
+            zone_color = get_ashrae_zone_color(df, climate_zone)
             st.markdown(
-                f'<p style="font-size: 18px; font-weight: 500; color: #dc3545; margin: 10px 0;">{climate_zone_name}</p>',
+                f'<p style="font-size: 18px; font-weight: 500; color: {zone_color}; margin: 10px 0;">{climate_zone_name}</p>',
                 unsafe_allow_html=True,
             )
         else:
             climate_zone_name = None
             st.markdown('<p style="font-size: 18px; font-weight: 500; color: #dc3545; margin: 10px 0;">-</p>',
                         unsafe_allow_html=True)
-        
-        # Button layout - Generate Report and Download EPW side by side
-        # col1, col2 = st.columns([1, 1])
-        # with col1:
-        #     report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
-        # with col2:
-        #     if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
-        #         epw_url = result.iloc[0]["EPW File"]
-        #         if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
-        #             st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=True)
-        #         else:
-        #             st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
-        #     else:
-        #         st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
         
         report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=False, width=300)
         if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
@@ -774,7 +794,6 @@ if select_standard == "ASHRAE":
                         <div class="report-label">Climate Zone Name</div>
                         <div class="report-value">{climate_zone_name}</div>
                     </div>
-
                 </div>
             """, unsafe_allow_html=True)
 
@@ -811,7 +830,11 @@ elif select_standard == "ECBC":
 
         st.markdown('<div class="label-text">State</div>', unsafe_allow_html=True)
         states = sorted(df["State"].unique())
-        selected_state = st.selectbox("State", states, key="state", label_visibility="collapsed", width=300)
+
+        default_state = "Delhi"        
+        default_index = states.index(default_state) if default_state in states else 0
+
+        selected_state = st.selectbox("State", default_state, key="state", label_visibility="collapsed", width=300)
         
         st.markdown('<div class="label-text">Location</div>', unsafe_allow_html=True)
         locations = sorted(df[df["State"] == selected_state]["Location"].unique())
@@ -822,8 +845,9 @@ elif select_standard == "ECBC":
         st.markdown('<div class="label-text">Climate Zone:</div>', unsafe_allow_html=True)
         if not result.empty:
             climate_zone = result.iloc[0]["Climate Zone"]
+            zone_color = get_ecbc_zone_color(climate_zone)
             st.markdown(
-                f'<p style="font-size: 28px; font-weight: bold; color: #dc3545; margin: 10px 0;">{climate_zone}</p>',
+                f'<p style="font-size: 28px; font-weight: bold; color: {zone_color}; margin: 10px 0;">{climate_zone}</p>',
                 unsafe_allow_html=True,
             )
         else:
@@ -831,29 +855,15 @@ elif select_standard == "ECBC":
             st.markdown('<p style="font-size: 28px; font-weight: bold; color: #dc3545; margin: 10px 0;">-</p>',
                         unsafe_allow_html=True)
         
-        # Button layout - Generate Report and Download EPW side by side
-        # col1, col2 = st.columns([1, 1])
-        # with col1:
-        #     report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=True)
-        # with col2:
-        #     if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
-        #         epw_url = result.iloc[0]["EPW File"]
-        #         if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
-        #             st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=True)
-        #         else:
-        #             st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
-        #     else:
-        #         st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
-        
         report_clicked = st.button("GENERATE REPORT", type="primary", use_container_width=False, width=300)
         if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
             epw_url = result.iloc[0]["EPW File"]
             if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
                 st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=False, width=300)
             else:
-                st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+                st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
         else:
-            st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=True)
+            st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
         
         if report_clicked and not result.empty:
             epw_file = result.iloc[0].get("EPW File", "Not Available")
