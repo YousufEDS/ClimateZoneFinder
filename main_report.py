@@ -844,9 +844,9 @@ def generate_ecbc_pdf_report(location_name, state_name, climate_zone, latitude, 
     # Title
     story.append(Paragraph("CLIMATE ZONE FINDER REPORT", title_style))
     story.append(Spacer(1, 0.2*inch))
-    
-    # Report Header - Location Information
-    story.append(Paragraph("LOCATION INFORMATION", heading_style))
+
+    # Report Header - Project Information
+    story.append(Paragraph("Project INFORMATION", heading_style))
     
     # Create location info table
     location_data = [
@@ -906,7 +906,7 @@ def generate_ecbc_pdf_report(location_name, state_name, climate_zone, latitude, 
             # Try to add image
             try:
                 # Resize image to fit in PDF
-                img = Image(img_path, width=5*inch, height=3*inch)
+                img = Image(img_path, width=4*inch, height=3*inch)
                 story.append(img)
                 story.append(Spacer(1, 0.15*inch))
             except:
@@ -1205,11 +1205,11 @@ elif select_standard == "ECBC":
         if not result.empty and pd.notna(result.iloc[0].get("EPW File", None)):
             epw_url = result.iloc[0]["EPW File"]
             if epw_url and str(epw_url).strip() != "" and str(epw_url) != "0":
-                st.link_button("📥 DOWNLOAD EPW", epw_url, type="secondary", use_container_width=False, width=300)
+                st.link_button("DOWNLOAD EPW", epw_url, type="secondary", use_container_width=False, width=300)
             else:
-                st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
+                st.button("DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
         else:
-            st.button("📥 DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
+            st.button("DOWNLOAD EPW", type="secondary", disabled=True, use_container_width=False, width=300)
         
         if report_clicked and not result.empty:
             epw_file = result.iloc[0].get("EPW File", "Not Available")
@@ -1303,12 +1303,11 @@ elif select_standard == "ECBC":
                 pdf_data = pdf_buffer.getvalue()
                 filename = f"Climate_Zone_Report_{selected_location}_{climate_zone}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
                 
-                # Use Streamlit's download button for reliable download
                 # The button appears automatically after report generation
                 col1, col2, col3 = st.columns([1, 1, 1])
                 with col1:
                     st.download_button(
-                        label="📥 Download PDF Report",
+                        label="Download PDF Report",
                         data=pdf_data,
                         file_name=filename,
                         mime="application/pdf",
