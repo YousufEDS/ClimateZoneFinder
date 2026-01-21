@@ -1,4 +1,4 @@
-streamlit as st
-pandas as pd
-json
+streamlit
+pandas
 reportlab
+Pillow
