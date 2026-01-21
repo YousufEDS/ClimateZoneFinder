@@ -96,6 +96,67 @@ st.markdown("""
     .stSelectbox > div > div {
         max-width: 100% !important;
     }
+    
+    /* ECBC Zone Images Styling */
+    .climate-zone-header {
+        text-align: center;
+        font-size: 36px;
+        font-weight: 350;
+        color: #dec45e;
+        margin: 40px 0 30px 0;
+        letter-spacing: 2px;
+    }
+    
+    .ecbc-images-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin: 30px 0;
+        padding: 20px;
+        background: #ffffff;
+        border-radius: 10px;
+    }
+    
+    .ecbc-image-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .ecbc-image-title {
+        font-size: 22px;
+        font-weight: 650;
+        color: #333;
+        margin-bottom: 15px;
+        text-align: center;
+    }
+    
+    .ecbc-image-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 250px;
+    }
+    
+    .ecbc-image-wrapper img {
+        max-height: 250px !important;
+        width: auto !important;
+        object-fit: contain !important;
+        display: block !important;
+    }
+    
+    .ecbc-image-description {
+        font-size: 16px;
+        color: #666;
+        text-align: center;
+        margin-top: 15px;
+        line-height: 1.5;
+        padding: 0 10px;
+        text-align: justify;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -106,7 +167,7 @@ st.markdown('<div class="header-line"></div>', unsafe_allow_html=True)
 st.markdown("""
     <div class="description">
     Identify the climate zone of any location across the world using ASHRAE Standard 169 or 
-    explore Indian climate zones using ECBC (Energy Conservation Building Code) classification.
+    ECBC (Energy Conservation Building Code) classification.
     </div>
 """, unsafe_allow_html=True)
 
@@ -492,7 +553,7 @@ def amcharts_india_map(df, lat_sel, lon_sel, location_name, state_name, climate_
             background: #f8f9fa;
             border-radius: 8px;
             border: 1px solid #dee2e6;
-            max-height: 300px;
+            max-height: 250px;
             overflow-y: auto;
         }}
         #legend-ecbc::-webkit-scrollbar {{
@@ -834,7 +895,7 @@ elif select_standard == "ECBC":
         default_state = "Delhi"        
         default_index = states.index(default_state) if default_state in states else 0
 
-        selected_state = st.selectbox("State", default_state, key="state", label_visibility="collapsed", width=300)
+        selected_state = st.selectbox("State", states, index=default_index, key="state", label_visibility="collapsed", width=300)
         
         st.markdown('<div class="label-text">Location</div>', unsafe_allow_html=True)
         locations = sorted(df[df["State"] == selected_state]["Location"].unique())
@@ -867,29 +928,8 @@ elif select_standard == "ECBC":
         
         if report_clicked and not result.empty:
             epw_file = result.iloc[0].get("EPW File", "Not Available")
-            epw_display = f'<a href="{epw_file}" target="_blank" style="color: white; text-decoration: underline;">Download EPW</a>' if (epw_file and str(epw_file).strip() != "" and str(epw_file) != "0") else "Not Available"
             
-            st.markdown(f"""
-                <div class="report-card">
-                    <div class="report-title">ECBC Climate Zone Report</div>
-                    <div class="report-item">
-                        <div class="report-label">Location</div>
-                        <div class="report-value">{selected_location}</div>
-                    </div>
-                    <div class="report-item">
-                        <div class="report-label">State</div>
-                        <div class="report-value">{selected_state}</div>
-                    </div>
-                    <div class="report-item">
-                        <div class="report-label">Climate Zone</div>
-                        <div class="report-value">{climate_zone}</div>
-                    </div>
-                    <div class="report-item">
-                        <div class="report-label">EPW File</div>
-                        <div class="report-value">{epw_display}</div>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
+            st.write('Coming Soon......')
 
     with right_col:
         st.markdown('<div class="section-title">India Climate Zone Map (ECBC)</div>', unsafe_allow_html=True)
@@ -913,7 +953,142 @@ elif select_standard == "ECBC":
         else:
             st.info("Please select a location to view on the map.")
 
-
+    # ECBC Zone Images Section with Climate Zone Name at Top
+    if not result.empty and climate_zone:
+        # Climate zone specific data
+        ecbc_zone_data = {
+            "Cold": {
+                "images": [
+                    "images/climate_zone_finder.png",
+                    "images/sun_space.png",
+                    "images/trombe_wall.png"
+                ],
+                "titles": ["Surface area to volume ratio", "Sun Space", "Trombe Wall"],
+                "descriptions": [
+                    "In cold regions, building’s shape needs to be compact to reduce heat gain and losses, respectively. The surface to volume(S/V) ratio of the building should be as low as possible to minimize heat loss.",
+                    "The south facing sun space to catch maximum heat inside. The trapped heat keeps the indoor warm in the cold climate.",
+                    "The hot air between the glazing and the wall gets heated up and enters inside to store sensible heat."
+                ]
+            },
+            "Composite": {
+                "images": [
+                    "images/shading_windows.png",
+                    "images/Cool_Roof.png",
+                    "images/Light_shelf.png"
+                ],
+                "titles": ["Shading", "Cool Roof", "Light Shelf"],
+                "descriptions": [
+                    "Extended roof, horizontal overhangs over the windows are effective in shading. These devices are designed to block the summer sun but allowing the winter sun.",
+                    "Cool roofs reflect most of the solar radiation and efficiently emit some of the absorbed radiation back into the atmosphere, instead of conducting it to the building below.",
+                    "The external light shelves to penetrate diffused light inside the space. They serve the dual purpose by acting as a shading device."
+                ]
+            },
+            "Hot-Dry": {
+                "images": [
+                    "images/climate_zone_finder.png",
+                    "images/Evaporative_Cooling.png",
+                    "images/Cool_Roof.png"
+                ],
+                "titles": ["Surface area to volume ratio", "Evaporative Cooling", "Cool Roof"],
+                "descriptions": [
+                    "In hot & dry regions, building’s shape needs to be compact to reduce heat gain and losses, respectively. The surface to volume(S/V) ratio of the building should be as low as possible to minimize heat gain.",
+                    "Evaporative cooling is mostly effective in hot and dry climate where the humidity is low. Water in pools and fountains can be used as a cooling element along with cross-ventilating arrangement of openings.",
+                    "Cool roofs reflect most of the solar radiation and efficiently emit some of the absorbed radiation back into the atmosphere, instead of conducting it to the building below."
+                ]
+            },
+            "Temperate": {
+                "images": [
+                    "images/natural_ventilation.png",
+                    "images/Shaded_verandahs.png",
+                    "images/orientation.png"
+                ],
+                "titles": ["Natural ventilation", "Shaded Verandahs", "Orientation"],
+                "descriptions": [
+                    "Naturally ventilated buildings rely on wind that is naturally prevalent at the site. The fenestrations of the building should be designed to capture the breeze for effective ventilation.",
+                    "Extended roof, horizontal overhangs over the windows are effective in shading. These devices can be designed to be fixed or moveable, so you can adjust them according.",
+                    "By orienting the shorter sides of the building in the direction of strongest solar radiation, the thermal impact from solar radiation is minimised."
+                ]
+            },
+            "Warm-Humid": {
+                "images": [
+                    "images/Siting_Prevailing_wind.png",
+                    "images/Shaded_verandahs.png",
+                    "images/natural_ventilation.png"
+                ],
+                "titles": ["Siting- Design for prevalent wind patterns", "Shaded Verandahs", "Natural ventilation"],
+                "descriptions": [
+                    "In warm and humid climates, buildings are placed on site to catch maximum wind.\n The plantations help channelize and filter the wind.",
+                    "Extended roof, horizontal overhangs over the windows are effective in shading. These devices can be designed to be fixed or moveable, so you can adjust them according.",
+                    "In humid climates such as that prevailing in Coastal regions, ventilation can bring in much needed relief. Naturally ventilated buildings rely on wind that is naturally prevalent at the site."
+                ]
+            }
+        }
+        
+        if climate_zone in ecbc_zone_data:
+            zone_info = ecbc_zone_data[climate_zone]
+            zone_color = get_ecbc_zone_color(climate_zone)
+            
+            # Climate Zone Header
+            st.markdown(f'<div class="climate-zone-header" style="color: {zone_color};">{climate_zone}</div>', unsafe_allow_html=True)
+            
+            # Additional CSS for image containers with fixed dimensions
+            st.markdown("""
+                <style>
+                /* Force consistent image sizing */
+                [data-testid="stImage"] {
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    min-height: 350px !important;
+                    background: #ffffff;
+                    border-radius: 0px;
+                    padding: 10px;
+                    margin: 15px 0;
+                }
+                
+                [data-testid="stImage"] img {
+                    height: 330px !important;
+                    width: auto !important;
+                    max-width: 100% !important;
+                    object-fit: contain !important;
+                }
+                
+                .ecbc-image-title {
+                    font-size: 20px !important;
+                    font-weight: 600 !important;
+                    color: #333 !important;
+                    margin-bottom: 10px !important;
+                    text-align: center !important;
+                }
+                
+                .ecbc-image-description {
+                    font-size: 15px !important;
+                    color: #555 !important;
+                    text-align: justify !important;
+                    margin-top: 15px !important;
+                    line-height: 1.6 !important;
+                    padding: 0 5px !important;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+            
+            # Create three columns for images
+            img_col1, img_col2, img_col3 = st.columns(3)
+            
+            with img_col1:
+                st.markdown(f'<div class="ecbc-image-title">{zone_info["titles"][0]}</div>', unsafe_allow_html=True)
+                st.image(zone_info["images"][0], use_container_width=True)
+                st.markdown(f'<div class="ecbc-image-description">{zone_info["descriptions"][0]}</div>', unsafe_allow_html=True)
+            
+            with img_col2:
+                st.markdown(f'<div class="ecbc-image-title">{zone_info["titles"][1]}</div>', unsafe_allow_html=True)
+                st.image(zone_info["images"][1], use_container_width=True)
+                st.markdown(f'<div class="ecbc-image-description">{zone_info["descriptions"][1]}</div>', unsafe_allow_html=True)
+            
+            with img_col3:
+                st.markdown(f'<div class="ecbc-image-title">{zone_info["titles"][2]}</div>', unsafe_allow_html=True)
+                st.image(zone_info["images"][2], use_container_width=True)
+                st.markdown(f'<div class="ecbc-image-description">{zone_info["descriptions"][2]}</div>', unsafe_allow_html=True)               
 # Footer
 st.markdown("---")
 st.markdown("""
