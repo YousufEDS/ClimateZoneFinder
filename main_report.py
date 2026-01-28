@@ -175,8 +175,8 @@ st.markdown('<div class="header-line"></div>', unsafe_allow_html=True)
 
 st.markdown("""
     <div class="description">
-    Identify the climate zone of any location across the world using ASHRAE Standard 169 or 
-    ECBC (Energy Conservation Building Code) classification.
+    Identify the climate zone of any location across the world using ASHRAE Standard 169-2013 or 
+    NBC (National Building Code) classification.
     </div>
 """, unsafe_allow_html=True)
 
@@ -846,7 +846,7 @@ def generate_ecbc_pdf_report(location_name, state_name, climate_zone, latitude, 
     story.append(Spacer(1, 0.2*inch))
 
     # Report Header - Project Information
-    story.append(Paragraph("Project INFORMATION", heading_style))
+    story.append(Paragraph("PROJECT INFORMATION", heading_style))
     
     # Create location info table
     location_data = [
@@ -937,14 +937,14 @@ def generate_ecbc_pdf_report(location_name, state_name, climate_zone, latitude, 
 
 
 # Main Application Logic
-standard_options = ["ASHRAE", "ECBC"]
+standard_options = ["ASHRAE-2013", "NBC"]
 select_standard = st.selectbox("Select Standard", standard_options, index=0, width=300)
 
 # Two Column Layout
 left_col, right_col = st.columns([1, 2.5])
 
 # ASHRAE Standard
-if select_standard == "ASHRAE":
+if select_standard == "ASHRAE-2013":
     df = load_ashrae_data()
     
     with left_col:
@@ -1161,8 +1161,8 @@ if select_standard == "ASHRAE":
                 st.image(zone_info["images"][2], use_container_width=True)
                 st.markdown(f'<div class="ecbc-image-description">{zone_info["descriptions"][2]}</div>', unsafe_allow_html=True)
 
-# ECBC Standard (India)
-elif select_standard == "ECBC":
+# NBC Standard (India)
+elif select_standard == "NBC":
     df = load_ecbc_data()
     
     with left_col:
