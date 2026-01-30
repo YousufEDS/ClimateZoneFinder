@@ -1,4 +1,3 @@
-from tkinter import font
 from matplotlib.pylab import size
 from shapely import transform
 import streamlit as st
